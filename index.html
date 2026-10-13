@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MBTI로 나의 포켓몬 찾기</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts & Pretendard font for clean legibility -->
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: "Pretendard Variable", Pretendard, "Noto Sans KR", -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+            font-weight: 400;
+            background-color: #0b0e14;
+            background-image: 
+                radial-gradient(circle at 20% 15%, rgba(239, 68, 68, 0.12) 0%, transparent 45%),
+                radial-gradient(circle at 80% 85%, rgba(59, 130, 246, 0.12) 0%, transparent 45%),
+                radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+            background-size: 100% 100%, 100% 100%, 28px 28px;
+            color: #f1f5f9;
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        /* Glassmorphism containers */
+        .glass-card {
+            background: rgba(18, 24, 38, 0.85);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        /* MBTI Button Styling */
+        .mbti-btn {
+            transition: all 0.2s ease-out;
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.8), rgba(15, 23, 42, 0.9));
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .mbti-btn:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 20px rgba(239, 68, 68, 0.25), 0 0 15px rgba(59, 130, 246, 0.3);
+            border-color: #f59e0b;
+            background: linear-gradient(135deg, rgba(30, 41, 59, 1), rgba(30, 58, 138, 0.4));
+        }
+
+        .mbti-btn:active {
+            transform: translateY(-1px);
+        }
+
+        /* Ash Speech Bubble */
+        .speech-bubble {
+            position: relative;
+            background: rgba(26, 34, 52, 0.95);
+            border: 2px solid #ef4444;
+            box-shadow: 0 0 20px rgba(239, 68, 68, 0.25);
+        }
+
+        .speech-bubble::before {
+            content: '';
+            position: absolute;
+            left: -14px;
+            top: 28px;
+            border-width: 8px 14px 8px 0;
+            border-style: solid;
+            border-color: transparent #ef4444 transparent transparent;
+        }
+
+        .speech-bubble::after {
+            content: '';
+            position: absolute;
+            left: -10px;
+            top: 30px;
+            border-width: 6px 11px 6px 0;
+            border-style: solid;
+            border-color: transparent rgba(26, 34, 52, 0.95) transparent transparent;
+        }
+
+        @media (max-width: 640px) {
+            .speech-bubble::before {
+                left: 30px;
+                top: -14px;
+                border-width: 0 8px 14px 8px;
+                border-color: transparent transparent #ef4444 transparent;
+            }
+            .speech-bubble::after {
+                left: 32px;
+                top: -10px;
+                border-width: 0 6px 11px 6px;
+                border-color: transparent transparent rgba(26, 34, 52, 0.95) transparent;
+            }
+        }
+
+        /* Result Animation */
+        .pop-in {
+            animation: popIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes popIn {
+            0% { opacity: 0; transform: scale(0.92) translateY(20px); }
+            100% { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        /* Subtle Float Animation */
+        .float-anim {
+            animation: float 3.5s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-8px); }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between p-4 md:p-8 text-slate-100">
+
+    <header class="text-center my-3 md:my-5">
+        <div class="inline-block relative">
+            <span class="inline-block bg-gradient-to-r from-red-600 to-blue-600 text-white text-xs font-semibold px-3.5 py-1 rounded-full border border-white/20 uppercase tracking-wider mb-2 shadow-md">
+                POKÉMON x MBTI
+            </span>
+            <h1 class="text-3xl md:text-5xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-amber-300 to-yellow-400 drop-shadow-sm">
+                MBTI 포켓몬 도감
+            </h1>
+            <p class="text-slate-300 text-sm md:text-base mt-2 font-normal">
+                나의 MBTI와 완벽히 매칭되는 포켓몬 파트너를 확인해보세요!
+            </p>
+        </div>
+    </header>
+
+    <main class="max-w-4xl mx-auto w-full flex-grow flex flex-col justify-center my-2 md:my-4">
+
+        <!-- ================= PAGE 1: MBTI SELECTION PAGE ================= -->
+        <div id="selection-page" class="space-y-6">
+            
+            <!-- Ash Ketchum Banner & Dialogue -->
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-5 p-5 md:p-6 rounded-2xl glass-card border border-red-500/30">
+                
+                <!-- Real Ash & Pikachu Image Frame -->
+                <div class="relative flex-shrink-0 float-anim">
+                    <div class="w-28 h-28 md:w-32 md:h-32 rounded-full border-3 border-red-500/80 overflow-hidden shadow-[0_0_20px_rgba(239,68,68,0.4)] bg-gradient-to-b from-slate-800 to-slate-900 flex items-center justify-center p-1">
+                        <img 
+                            src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/25.png" 
+                            alt="지우와 피카츄 파트너" 
+                            class="w-full h-full object-contain filter drop-shadow-md"
+                        />
+                    </div>
+                    <span class="absolute -bottom-2 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-red-600 to-blue-600 text-white text-xs font-medium px-3 py-0.5 rounded-full border border-white/30 shadow-md whitespace-nowrap">
+                        포켓몬 트레이너 지우
+                    </span>
+                </div>
+
+                <!-- Speech Bubble Box -->
+                <div class="speech-bubble rounded-2xl p-4 md:p-5 text-slate-100 flex-grow max-w-lg">
+                    <p class="text-lg md:text-xl font-bold text-yellow-300 mb-1 flex items-center gap-2">
+                        <span>"원하는 MBTI를 골라줘!"</span>
+                        <i class="fa-solid fa-bolt text-red-500 text-sm"></i>
+                    </p>
+                    <p class="text-sm md:text-base text-slate-200 leading-relaxed font-normal">
+                        안녕! 나는 태초마을의 지우야! <br class="hidden sm:inline"/>
+                        너의 성격과 딱 어울리는 최고의 파트너 포켓몬을 찾아줄게. 아래 16가지 유형 중 하나를 선택해 봐!
+                    </p>
+                </div>
+            </div>
+
+            <!-- MBTI Selection Grid -->
+            <div class="glass-card p-5 md:p-7 rounded-2xl border border-white/10">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-lg md:text-xl font-bold text-white flex items-center gap-2">
+                        <span class="w-2.5 h-2.5 rounded-full bg-red-500 inline-block animate-ping"></span>
+                        MBTI 유형 선택
+                    </h2>
+                    <span class="text-xs text-slate-400 font-normal">16가지 성격 유형</span>
+                </div>
+                
+                <div id="mbti-grid" class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <!-- JS injects stylized MBTI buttons here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= PAGE 2: RESULT DISPLAY PAGE ================= -->
+        <div id="result-page" class="hidden">
+            <div class="pop-in glass-card rounded-3xl border border-red-500/30 p-6 md:p-8 shadow-2xl relative overflow-hidden max-w-2xl mx-auto">
+                
+                <!-- Pokeball Background Accent -->
+                <div class="absolute -right-16 -bottom-16 w-72 h-72 rounded-full border-[24px] border-white/5 opacity-20 pointer-events-none"></div>
+
+                <!-- Header Badges -->
+                <div class="flex justify-between items-center mb-5 relative z-10">
+                    <span id="result-mbti-badge" class="bg-gradient-to-r from-red-600 to-blue-600 text-white font-bold text-lg md:text-xl px-4 py-1 rounded-xl shadow-md border border-white/20">
+                        INTP
+                    </span>
+                    <span id="result-type-tag" class="bg-slate-800/90 text-yellow-300 font-medium text-xs md:text-sm px-3.5 py-1 rounded-full border border-yellow-500/30">
+                        🔥 불꽃 타입
+                    </span>
+                </div>
+
+                <!-- Main Pokemon Image & Details -->
+                <div class="text-center relative z-10 my-2">
+                    <div class="relative inline-block my-2">
+                        <div class="w-44 h-44 md:w-56 md:h-56 rounded-full bg-gradient-to-b from-slate-800/80 to-slate-900/90 border border-white/10 mx-auto flex items-center justify-center shadow-[0_0_40px_rgba(59,130,246,0.2)] p-3">
+                            <img 
+                                id="result-pokemon-img" 
+                                src="" 
+                                alt="포켓몬 이미지" 
+                                class="w-full h-full object-contain filter drop-shadow-[0_8px_12px_rgba(0,0,0,0.7)] float-anim"
+                                onerror="this.onerror=null; this.src='https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/25.png';"
+                            />
+                        </div>
+                    </div>
+
+                    <h2 id="result-pokemon-name" class="text-2xl md:text-4xl font-bold text-white mt-3 tracking-normal">
+                        포켓몬 이름
+                    </h2>
+                    <p id="result-catchphrase" class="text-yellow-300 font-medium text-sm md:text-base mt-1.5 italic">
+                        "특징 설명 요약"
+                    </p>
+                </div>
+
+                <!-- Match Reason List -->
+                <div class="bg-slate-900/80 rounded-xl p-4 md:p-5 my-5 border border-white/10 shadow-inner relative z-10">
+                    <h3 class="text-red-400 font-bold text-base md:text-lg mb-2.5 flex items-center gap-2">
+                        <i class="fa-solid fa-star text-yellow-400 text-sm"></i> 어울리는 이유
+                    </h3>
+                    <ul id="result-reasons" class="text-slate-200 text-sm md:text-base space-y-2 font-normal leading-relaxed list-disc list-inside">
+                        <!-- JS injected list items -->
+                    </ul>
+                </div>
+
+                <!-- Chemistry Match Box -->
+                <div class="bg-gradient-to-r from-blue-950/80 to-slate-900/90 border border-blue-500/30 text-white rounded-xl p-4 md:p-5 my-4 shadow-md flex items-center justify-between gap-3 relative z-10">
+                    <div>
+                        <div class="text-xs font-medium text-blue-400 tracking-wide mb-1">
+                            ⚡ 잘 맞는 궁합 파트너
+                        </div>
+                        <div class="text-base md:text-xl font-bold flex items-center gap-2">
+                            <span id="compat-mbti" class="bg-red-600/90 text-white px-2 py-0.5 rounded text-sm md:text-base">ENFP</span>
+                            <span id="compat-pokemon" class="text-yellow-300">이브이</span>
+                        </div>
+                    </div>
+                    
+                    <div class="w-14 h-14 md:w-16 md:h-16 bg-slate-800/80 rounded-lg p-1 border border-white/10 flex-shrink-0 flex items-center justify-center">
+                        <img id="compat-pokemon-img" src="" alt="궁합 포켓몬" class="w-full h-full object-contain filter drop-shadow-sm" />
+                    </div>
+                </div>
+
+                <!-- Retry Button -->
+                <div class="mt-6 text-center relative z-10">
+                    <button onclick="resetSelection()" class="w-full sm:w-auto bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-white font-medium text-base md:text-lg px-8 py-3 rounded-xl border-b-2 border-red-800 active:border-b-0 shadow-lg transition-all transform active:translate-y-0.5 flex items-center justify-center gap-2 mx-auto">
+                        <i class="fa-solid fa-rotate-left text-sm"></i>
+                        <span>다시 고르기</span>
+                    </button>
+                </div>
+
+            </div>
+        </div>
+
+    </main>
+
+    <footer class="text-center text-slate-500 text-xs font-normal mt-6 py-2">
+        <p>© Pokémon MBTI Finder. Official High-Res PokeAPI Artwork</p>
+    </footer>
+
+    <script>
+        // Official High Quality Pokemon Artwork CDN URL
+        const getPokemonImgUrl = (id) => `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${id}.png`;
+
+        // 16 MBTI Data Mapping with High-Resolution Pokemon IDs
+        const pokemonData = {
+            "ISTJ": {
+                id: 9,
+                name: "거북왕",
+                type: "💧 물 타입",
+                catchphrase: "신뢰와 책임감을 가진 든든한 원칙주의자",
+                reasons: [
+                    "맡은 역할을 언제나 차분하고 철저하게 끝까지 완수합니다.",
+                    "규칙과 약속을 중요하게 생각하여 주변 사람들에게 높은 신뢰를 줍니다.",
+                    "어떤 위기 상황에서도 흔들리지 않는 든든하고 단단한 중심축 역할을 합니다."
+                ],
+                compatMBTI: "ESFP",
+                compatPokemon: "피카츄",
+                compatId: 25
+            },
+            "ISFJ": {
+                id: 1,
+                name: "이상해씨",
+                type: "🍃 풀 / 독 타입",
+                catchphrase: "따뜻한 배려와 성실함을 갖춘 헌신적인 수호자",
+                reasons: [
+                    "상대방의 작은 부분까지 세심하게 보살피는 따뜻한 마음씨를 가졌습니다.",
+                    "성실하고 은근한 내면의 강인함으로 신뢰감 있는 안도감을 줍니다.",
+                    "한결같은 태도로 친구들과 주변 사람들을 정성껏 보살핍니다."
+                ],
+                compatMBTI: "ESTP",
+                compatPokemon: "리자몽",
+                compatId: 6
+            },
+            "INFJ": {
+                id: 151,
+                name: "뮤",
+                type: "🧠 에스퍼 타입",
+                catchphrase: "깊은 통찰력과 이상적인 순수함을 품은 영혼",
+                reasons: [
+                    "사람들의 마음을 조용히 이해하며 진정성 있는 관계를 소중히 여깁니다.",
+                    "겉으로는 차분하지만 내면에는 명확한 신념과 이상을 지니고 있습니다.",
+                    "평화와 조화를 중요시하며 자신만의 깊은 생각을 차분히 펼쳐냅니다."
+                ],
+                compatMBTI: "ENTP",
+                compatPokemon: "팬텀",
+                compatId: 94
+            },
+            "INTJ": {
+                id: 150,
+                name: "뮤츠",
+                type: "🧠 에스퍼 타입",
+                catchphrase: "치밀하고 논리적인 사고를 가진 최고의 전략가",
+                reasons: [
+                    "뛰어난 예리함과 통찰력으로 문제의 본질을 즉시 파악해냅니다.",
+                    "독립성이 강하며 목표가 정해지면 계획에 맞춰 철저히 추진합니다.",
+                    "높은 기준과 지적 호기심을 지니고 지속적으로 발전해나갑니다."
+                ],
+                compatMBTI: "ENFP",
+                compatPokemon: "푸린",
+                compatId: 39
+            },
+            "ISTP": {
+                id: 658,
+                name: "개굴닌자",
+                type: "💧 물 / 악 타입",
+                catchphrase: "냉철한 상황 판단력과 민첩한 실전파",
+                reasons: [
+                    "말보다는 행동으로 빠르게 증명해내는 실용적인 능력이 뛰어납니다.",
+                    "위기 상황에 다다랐을 때 놀라운 집중력과 순발력을 발휘합니다.",
+                    "자신만의 전문 기술과 능력을 차분히 연마하는 정밀함을 가졌습니다."
+                ],
+                compatMBTI: "ESFJ",
+                compatPokemon: "해피너스",
+                compatId: 242
+            },
+            "ISFP": {
+                id: 132,
+                name: "메타몽",
+                type: "🌟 노말 타입",
+                catchphrase: "유연한 사고와 높은 유연성을 가진 온화한 아티스트",
+                reasons: [
+                    "어떤 사람이나 환경에도 자연스럽게 스며드는 유연함을 지녔습니다.",
+                    "자신과 타인의 감정과 가치관을 있는 그대로 깊게 존중해줍니다.",
+                    "틀에 매이지 않고 편안함과 편안한 감각을 전합니다."
+                ],
+                compatMBTI: "ESTJ",
+                compatPokemon: "윈디",
+                compatId: 59
+            },
+            "INFP": {
+                id: 133,
+                name: "이브이",
+                type: "🌟 노말 타입",
+                catchphrase: "다양한 가능성과 풍부한 감성을 가진 따뜻한 파트너",
+                reasons: [
+                    "순수한 마음과 이상적인 생각으로 주변을 따스하게 밝혀줍니다.",
+                    "자신만의 솔직한 가치관과 진정성으로 세상을 바라봅니다.",
+                    "다양한 환경과 사람들에게 다채로운 가능성을 열어둡니다."
+                ],
+                compatMBTI: "ENTJ",
+                compatPokemon: "마기라스",
+                compatId: 248
+            },
+            "INTP": {
+                id: 65,
+                name: "후딘",
+                type: "🧠 에스퍼 타입",
+                catchphrase: "호기심이 많고 문제 해결 능력이 비범한 탐구자",
+                reasons: [
+                    "사물의 원리와 논리적 문제 해결을 즐기는 원만한 호기심을 가졌습니다.",
+                    "조용히 자신만의 세계에서 독창적이고 원대한 아이디어를 구상합니다.",
+                    "고정관념에 구애받지 않고 합리적인 방안을 찾아냅니다."
+                ],
+                compatMBTI: "ENFJ",
+                compatPokemon: "루카리오",
+                compatId: 448
+            },
+            "ESTP": {
+                id: 6,
+                name: "리자몽",
+                type: "🔥 불꽃 / 비행",
+                catchphrase: "열정적이고 도전적인 에너지를 가진 실행가",
+                reasons: [
+                    "망설이기보다 즉시 행동으로 옮기는 강한 추진력을 자랑합니다.",
+                    "어려운 목표 앞에서도 포기하지 않고 불꽃처럼 당당히 도전합니다.",
+                    "유쾌하고 적극적인 태도로 주변 사람들에게 자신감을 불어넣어 줍니다."
+                ],
+                compatMBTI: "ISFJ",
+                compatPokemon: "이상해씨",
+                compatId: 1
+            },
+            "ESFP": {
+                id: 25,
+                name: "피카츄",
+                type: "⚡ 전기 타입",
+                catchphrase: "주변을 환하게 밝히는 통통 튀는 슈퍼스타",
+                reasons: [
+                    "솔직하고 통통 튀는 표현력으로 누구에게나 즐거운 에너지를 전달합니다.",
+                    "새로운 흥미와 즐거움을 발견하면 미소로 적극적으로 다가갑니다.",
+                    "어디서나 친근하고 밝은 매력으로 주목과 사랑을 받습니다."
+                ],
+                compatMBTI: "ISTJ",
+                compatPokemon: "거북왕",
+                compatId: 9
+            },
+            "ENFP": {
+                id: 39,
+                name: "푸린",
+                type: "🧚 페어리 / 노말",
+                catchphrase: "풍부한 아이디어와 열정이 가득한 에너자이저",
+                reasons: [
+                    "밝은 에너지와 솔직한 감정으로 모임의 분위기를 생기 있게 만듭니다.",
+                    "자신만의 흥미로운 열정을 나누는 것을 좋아하며 사람들과 친해집니다.",
+                    "자유로운 풍부한 유머로 주변 사람들에게 웃음을 안겨줍니다."
+                ],
+                compatMBTI: "INTJ",
+                compatPokemon: "뮤츠",
+                compatId: 150
+            },
+            "ENTP": {
+                id: 94,
+                name: "팬텀",
+                type: "👻 고스트 / 독",
+                catchphrase: "재치 있고 창의적인 아이디어로 가득한 트릭스터",
+                reasons: [
+                    "고정관념을 깨는 상발상으로 새로운 즐거움을 끊임없이 만들어냅니다.",
+                    "지적 호기심이 풍부하여 유쾌한 대화와 토론을 즐깁니다.",
+                    "임기응변이 뛰어납니다. 곤란한 상황도 재치 있게 헤쳐 나갑니다."
+                ],
+                compatMBTI: "INFJ",
+                compatPokemon: "뮤",
+                compatId: 151
+            },
+            "ESTJ": {
+                id: 59,
+                name: "윈디",
+                type: "🔥 불꽃 타입",
+                catchphrase: "화끈함과 명확한 리더십을 갖춘 추진가",
+                reasons: [
+                    "체계적인 결단력과 명확한 방향 제시로 모임을 성공적으로 이끕니다.",
+                    "솔직하고 당당한 태도로 목표를 신속하고 철저하게 달성합니다.",
+                    "공정함과 명예를 존중하며 높은 가치관과 당당함을 보여줍니다."
+                ],
+                compatMBTI: "ISFP",
+                compatPokemon: "메타몽",
+                compatId: 132
+            },
+            "ESFJ": {
+                id: 242,
+                name: "해피너스",
+                type: "🌟 노말 타입",
+                catchphrase: "따뜻한 마음으로 해피 에너지를 전하는 오지라퍼",
+                reasons: [
+                    "주변 사람들의 기분을 살피며 정성을 다해 다정하게 응원해 줍니다.",
+                    "친근하고 사교적이어서 분위기를 부드럽게 만드는 데 탁월합니다.",
+                    "사람들과의 화합과 협력을 소중히 여기며 따스한 온기를 전합니다."
+                ],
+                compatMBTI: "ISTP",
+                compatPokemon: "개굴닌자",
+                compatId: 658
+            },
+            "ENFJ": {
+                id: 448,
+                name: "루카리오",
+                type: "🥊 격투 / 강철",
+                catchphrase: "타인을 진심으로 응원하는 정의로운 리더",
+                reasons: [
+                    "타인의 성장을 돕고 용기를 북돋아주는 든든하고 따뜻한 에너지를 지녔습니다.",
+                    "강한 정의감과 책임감으로 동료들과 친구들을 앞장서 보호합니다.",
+                    "진심 어린 공감 능력으로 상대방의 마음에 신뢰를 쌓아갑니다."
+                ],
+                compatMBTI: "INTP",
+                compatPokemon: "후딘",
+                compatId: 65
+            },
+            "ENTJ": {
+                id: 248,
+                name: "마기라스",
+                type: "🪨 바위 / 악 타입",
+                catchphrase: "압도적인 카리스마와 단단한 추진력의 리더",
+                reasons: [
+                    "명확한 비전과 강력한 주도력으로 목표를 향해 한 걸음씩 나아갑니다.",
+                    "어려운 난관에 부딪혀도 굴하지 않는 단단한 내면을 자랑합니다.",
+                    "논리적이고 체계적으로 주변 상황을 장악하여 큰 성과를 이루어냅니다."
+                ],
+                compatMBTI: "INFP",
+                compatPokemon: "이브이",
+                compatId: 133
+            }
+        };
+
+        function initButtons() {
+            const grid = document.getElementById('mbti-grid');
+            grid.innerHTML = '';
+
+            const mbtiList = Object.keys(pokemonData);
+            
+            mbtiList.forEach(mbti => {
+                const button = document.createElement('button');
+                const isExtravert = mbti.startsWith('E');
+                
+                const borderAccent = isExtravert ? 'hover:border-red-400/80' : 'hover:border-blue-400/80';
+                const badgeColor = isExtravert ? 'text-red-400' : 'text-blue-400';
+
+                button.className = `mbti-btn p-3 rounded-xl border ${borderAccent} text-center cursor-pointer flex flex-col items-center justify-center gap-0.5 shadow-sm`;
+                button.innerHTML = `
+                    <span class="text-lg md:text-xl font-bold text-white tracking-wide">${mbti}</span>
+                    <span class="text-xs ${badgeColor} font-normal">${pokemonData[mbti].name}</span>
+                `;
+                button.onclick = () => selectMBTI(mbti);
+                grid.appendChild(button);
+            });
+        }
+
+        function selectMBTI(mbti) {
+            const data = pokemonData[mbti];
+            if (!data) return;
+
+            // Update main data fields
+            document.getElementById('result-mbti-badge').innerText = mbti;
+            document.getElementById('result-type-tag').innerText = data.type;
+            document.getElementById('result-pokemon-name').innerText = data.name;
+            document.getElementById('result-catchphrase').innerText = `"${data.catchphrase}"`;
+            
+            // Set High Definition Official Images
+            document.getElementById('result-pokemon-img').src = getPokemonImgUrl(data.id);
+            document.getElementById('compat-pokemon-img').src = getPokemonImgUrl(data.compatId);
+
+            // Populate reason list
+            const reasonsList = document.getElementById('result-reasons');
+            reasonsList.innerHTML = '';
+            data.reasons.forEach(reason => {
+                const li = document.createElement('li');
+                li.innerText = reason;
+                reasonsList.appendChild(li);
+            });
+
+            // Populate Compatibility information
+            document.getElementById('compat-mbti').innerText = data.compatMBTI;
+            document.getElementById('compat-pokemon').innerText = data.compatPokemon;
+
+            // View Page Switch
+            document.getElementById('selection-page').classList.add('hidden');
+            const resultPage = document.getElementById('result-page');
+            resultPage.classList.remove('hidden');
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function resetSelection() {
+            document.getElementById('result-page').classList.add('hidden');
+            document.getElementById('selection-page').classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Initialize grid on document ready
+        window.onload = function() {
+            initButtons();
+        };
+    </script>
+</body>
+</html>
